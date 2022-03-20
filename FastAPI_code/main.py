@@ -1,13 +1,27 @@
-# give this in your terminal: uvicorn api_code:app --reload
+# give this in your terminal: uvicorn main:app --reload
 # this is our server: 127.0.0.1:8000/docs
 
 import imp
 import fastapi 
 from fastapi import FastAPI, Path, Query, HTTPException, status
-from typing import Optional
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+from typing import Optional, List, TypedDict
 from pydantic import BaseModel
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 class Shipment(BaseModel):
     name: str
@@ -21,11 +35,28 @@ class UpdateShipment(BaseModel):
     destination: Optional[str] = None 
     weight: Optional[float] = None 
 
+class UserModel(BaseModel):
+    email : str
+    password : str
+
+
+class LoginRequestModel(BaseModel):
+    email : str
+    password : str
+
+class LoginResponseModel(BaseModel):
+    successful : bool
+    user: Optional[UserModel] = None
+
+class RegisterRequestModel(BaseModel):
+    email : str
+    password : str
+
 # GET, POST, PUT(update information), DELETE 
 
-#@app.get("/")
-#def home():
-#    return {"Data": "Testing"}
+@app.get("/")
+def home():
+   return {"Data": "Testing"}
 
 #@app.get("/about")
 #def about():
@@ -33,6 +64,12 @@ class UpdateShipment(BaseModel):
 
 
 shipments = {}                ## later we want to change "shipments={} against an actual database!!"       
+users = {}
+
+
+@app.get("/get-shipments")
+def get_shipments() -> List[Shipment]:
+    return shipments
 
 @app.get("/get-shipment/{shipment_id}")     # "shipment_id can be change by any other name"
 def get_shipment(shipment_id: int = Path(None, description="The ID of the shipment you'd like to view", gt=0)):     # gt: greater than, lt: less than -> this means that the ID must be > 0, otherwise it will not accepted  
@@ -89,6 +126,32 @@ def delete_shipment(shipment_id: int = Query(..., description="The ID of the Shi
 
     del shipments[shipment_id]
     return {"Success": "Shipment deleted!"}
+
+
+# Auth management
+@app.post("/login")
+def login(login_data : LoginRequestModel) -> LoginResponseModel:
+    print(login_data)
+
+    if login_data.email in users and login_data.password == users[login_data.email].password:
+        response = LoginResponseModel(successful=True, user=users[login_data.email])
+    else:
+        response = LoginResponseModel(successful=False)
+    
+    return response
+
+
+@app.post("/register")
+def register(register_data : RegisterRequestModel) -> UserModel:
+    print(register_data)
+    
+    if register_data.email in users:
+        raise HTTPException(status_code=400, detail="User already exists.")
+
+    users[register_data.email] = register_data
+
+    response = UserModel(email=register_data.email, password=register_data.password)
+    return response
 
 
 #if you reloud the server all the information will be automatically deleted and refreshed!
