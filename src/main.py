@@ -39,7 +39,6 @@ class UserModel(BaseModel):
     email : str
     password : str
 
-
 class LoginRequestModel(BaseModel):
     email : str
     password : str

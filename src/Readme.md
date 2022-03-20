@@ -1,17 +1,43 @@
-# Setup
+# Setup on Linux
 
-In order to setup the project, please proceed as follows:
+Start by creating an isolated virtual environment. 
 
 ```bash
-  npm install
+python -m venv venv
+source venv/bin/activate 
 ```
 
-Start the server using:
 ```bash
-  npm start
+pip install -r requirements.txt
 ```
 
-Start the development server using with hot reload:
+Start the webserver with the following command
+
 ```bash
-  npx nodemon start
+./start.sh
 ```
+
+
+# Setup on Windows
+
+Start by creating an isolated virtual environment. 
+
+```bash
+python -m venv venv
+.\venv\Scripts\activate.bat
+```
+
+```bash
+pip install -r requirements.txt
+```
+
+Start the webserver with the following command
+
+```bash
+uvicorn main:app --reload
+```
+
+
+# Access
+After starting open the following URL [http://127.0.0.1:8000/static/index.html](http://127.0.0.1:8000/static/index.html)
+
